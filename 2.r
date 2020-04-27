@@ -37,22 +37,22 @@ gda <- function(X, y, stepsize, iteration, epsilon = 0.001, normalize = T) {
     deriv <- (t(cov) %*% ((cov %*% t(theta)) - res)) /nrow(res)
     return(t(deriv))
   }
-	
-	theta <- t(as.matrix(runif(n = ncol(X))))
-	theta.new <- theta + 1 # randomly assign initial values for theta
-
-	rec <- vector("list", iteration) 
-	rec[[1]] <- theta.new
-
-	step <- 1 
-	while(any(abs(theta.new - theta) > epsilon) & step <= iteration) {
-		# gradient descent 
-		theta.new <- theta - stepsize * derivative(X, y, theta)
-		rec[[step]] <- theta.new
-		
-		step <- step + 1
-	}
-	
-	out <- data.frame(do.call(rbind, rec), row.names = NULL)
-	return(list(out = out))
+  
+  theta <- t(as.matrix(runif(n = ncol(X))))
+  rec <- vector("list", iteration) 
+  rec[[1]] <- theta
+  
+  step <- 1 
+  
+  while(any(norm(derivative(X, y, theta),"2") > epsilon) & step <= iteration) {
+    # gradient descent 
+    theta.new <- theta - stepsize * derivative(X, y, theta)
+    rec[[step]] <- theta.new
+    theta <- theta.new
+    
+    step <- step + 1
+  }
+  
+  out <- data.frame(do.call(rbind, rec), row.names = NULL)
+  return(list(out = out))
 }
