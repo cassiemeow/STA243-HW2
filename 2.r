@@ -24,33 +24,32 @@ test.house.2 = lm(price ~ sqft_living+sqft_lot+bedrooms*bathrooms, data = test)
 summary(test.house.2)$r.squared # 0.5110569
 
 ### (d)
-gda <- function(X, y, stepsize, max.iter, epsilon = 0.001, standardize = T) {
+gda <- function(data, stepsize, max.iter, standardize = T, seed=123) {
   
-  if(standardize) {X <- scale(X)} # scale data if required
-  X <- as.matrix(cbind(X0 = 1, X)) # add a column of 1 to serve as the intercept
+  set.seed(seed)
+  data <- as.matrix(data)
+  if(standardize) {data <- scale(data)} # scale data if required
+  theta <- matrix(runif(n = ncol(data)), ncol=ncol(data), nrow=1)
   
-  theta <- matrix(runif(n = ncol(X)), ncol=ncol(X), nrow=1) 
+  X <- cbind(X0 = 1, data[,-ncol(data)]) # add a column of 1 to serve as the intercept
+  y <- data[,ncol(data)]
+  
+   
   # randomly generates starting values of theta
-  theta.new <- matrix(1, ncol=length(theta), nrow=1)
+  theta.new <- matrix(ncol=length(theta), nrow=1)
   n <- nrow(X)
   
-  step <- 0
+  step <- 1
   while ( step <= max.iter ) { 
-    error <- (X %*% t(theta)) - y
+    res <- (X %*% t(theta)) - y
     
-    if ( abs(theta.new-theta) < epsilon ) { 
-      break 
-      } 
-    else {
-      for(i in 1:length(theta)) {
-        gradient <- sum(error * X[,i]) / n
-        theta.new[1,i] <- theta[1,i] - stepsize * gradient
-      }
-      step <- step + 1
+    for(i in 1:length(theta)) {
+      p <- res * X[,i]
+      gradient <- sum(p) / n
+      theta.new[1,i] <- theta[1,i] - stepsize * gradient
     }
+    step <- step + 1
+    theta <- theta.new
   }
-  if (step == max.iter) {
-    print("The optimal value does not converge")
-  }
-  return(theta.new)
+  return(theta)
 }
