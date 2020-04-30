@@ -54,7 +54,7 @@ gda <- function(data, stepsize, max.iter, standardize = T, seed=123) {
   return(theta)
 }
 
-gda.version2 <- function(data, stepsize=0.01, epsilon=1, seed=123) {
+gda.version2 <- function(data, stepsize=0.01, epsilon=0.1, seed=123) {
   
   set.seed(seed)
   data <- as.matrix(data)
@@ -73,14 +73,12 @@ gda.version2 <- function(data, stepsize=0.01, epsilon=1, seed=123) {
   
   thres <- 2 * epsilon
   while ( thres > epsilon ) { 
+    # gradient <- t(X) %*% X %*% theta - t(X) %*% y
     res <- (X %*% theta) - y
-    gradient <- t(X) %*% res / n
-    
-    # grad <- t(X) %*% X %*% theta - t(X) %*% y
+    gradient <- (t(X) %*% res) / n
     theta <- theta - stepsize * gradient
     thres <- norm(gradient,"2")
   }
   theta.new <- ysd * theta/Xsd
-  inte <- -ysd*sum(theta*Xmean/Xsd)+ymean
-  return(c(inte, theta.new))
+  return( theta.new )
 }
