@@ -5,12 +5,12 @@ test = read.csv(".../test.data.csv")
 
 ### (a)
 # R2 indicates the percentage of the variance in the dependent variable that the independent variables explain collectively.
+#train.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = train)
+#summary(train.house)$r.squared # 0.5101139
+#test.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = test)
+#summary(test.house)$r.squared # 0.5054477 
 
-train.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = train)
-summary(train.house)$r.squared # 0.5101139
 
-test.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = test)
-summary(test.house)$r.squared # 0.5054477 
 
 ### (b)
 fit.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = house)
