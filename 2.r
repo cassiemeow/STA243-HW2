@@ -53,3 +53,34 @@ gda <- function(data, stepsize, max.iter, standardize = T, seed=123) {
   }
   return(theta)
 }
+
+gda.version2 <- function(data, stepsize=0.01, epsilon=1, seed=123) {
+  
+  set.seed(seed)
+  data <- as.matrix(data)
+  data <- apply(data,2,scale)
+  
+  X <- cbind(X0 = 1, data[,-ncol(data)]) # add a column of 1 to serve as the intercept
+  Xmean <- apply(X,2,mean)
+  Xsd <- apply(X,2,sd)
+  
+  y <- data[,ncol(data)]
+  ymean <- mean(y)
+  ysd <- sd(y)
+
+  theta <- runif(n = ncol(X)) # randomly generates starting values of theta
+  n <- nrow(X)
+  
+  thres <- 2 * epsilon
+  while ( thres > epsilon ) { 
+    res <- (X %*% theta) - y
+    gradient <- t(X) %*% res / n
+    
+    # grad <- t(X) %*% X %*% theta - t(X) %*% y
+    theta <- theta - stepsize * gradient
+    thres <- norm(gradient,"2")
+  }
+  theta.new <- ysd * theta/Xsd
+  inte <- -ysd*sum(theta*Xmean/Xsd)+ymean
+  return(c(inte, theta.new))
+}
