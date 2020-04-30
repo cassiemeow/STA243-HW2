@@ -24,35 +24,33 @@ test.house.2 = lm(price ~ sqft_living+sqft_lot+bedrooms*bathrooms, data = test)
 summary(test.house.2)$r.squared # 0.5110569
 
 ### (d)
-gda <- function(X, y, stepsize, iteration, epsilon = 0.001, normalize = T) {
-
-  X  <- as.matrix(X)
-  y <- as.matrix(y)
+gda <- function(X, y, stepsize, max.iter, epsilon = 0.001, standardize = T) {
   
-  if(normalize) {X <- scale(X)} # scale data if required
-	X <- cbind(X0 = 1, X) # add a column of 1 to serve as the intercept
+  if(standardize) {X <- scale(X)} # scale data if required
+  X <- as.matrix(cbind(X0 = 1, X)) # add a column of 1 to serve as the intercept
   
-  # create a function for obtaining first derivative of f(theta)
-  derivative <- function(cov, res, theta) {
-    deriv <- (t(cov) %*% ((cov %*% t(theta)) - res)) /nrow(res)
-    return(t(deriv))
-  }
+  theta <- matrix(runif(n = ncol(X)), ncol=ncol(X), nrow=1) 
+  # randomly generates starting values of theta
+  theta.new <- matrix(1, ncol=length(theta), nrow=1)
+  n <- nrow(X)
   
-  theta <- t(as.matrix(runif(n = ncol(X))))
-  rec <- vector("list", iteration) 
-  rec[[1]] <- theta
-  
-  step <- 1 
-  
-  while(any(norm(derivative(X, y, theta),"2") > epsilon) & step <= iteration) {
-    # gradient descent 
-    theta.new <- theta - stepsize * derivative(X, y, theta)
-    rec[[step]] <- theta.new
-    theta <- theta.new
+  step <- 0
+  while ( step <= max.iter ) { 
+    error <- (X %*% t(theta)) - y
     
-    step <- step + 1
+    if ( abs(theta.new-theta) < epsilon ) { 
+      break 
+      } 
+    else {
+      for(i in 1:length(theta)) {
+        gradient <- sum(error * X[,i]) / n
+        theta.new[1,i] <- theta[1,i] - stepsize * gradient
+      }
+      step <- step + 1
+    }
   }
-  
-  out <- data.frame(do.call(rbind, rec), row.names = NULL)
-  return(list(out = out))
+  if (step == max.iter) {
+    print("The optimal value does not converge")
+  }
+  return(theta.new)
 }
