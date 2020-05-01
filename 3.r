@@ -78,7 +78,43 @@ gda <- function(data, eps = 0.01, max.iter = 30, standardize = T, seed=123) {
 }
 
 
+### (e)
 
+sgda <- function(data, eps = 0.01, max.iter = 30, stepsize = 0.1, standardize = T, seed=123) {
+  
+  set.seed(seed)
+  #scaling data 
+  data <- as.matrix(data)
+  p = ncol(data)
+  n = nrow(data)
+  if(standardize) {data <- scale(data)} # scale data if required
+
+  #predictor and response 
+  X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
+  y <- data[,p]
+  stochastic.list <- sample(1:n, max.iter, replace=TRUE)
+  
+  #oracke solution(after passing the test, can be removed)
+  theta_opt = summary(lm(y ~ X[,2] + X[,3] + X[,4] + X[,5]))$coefficients[,1]
+  
+  #starting values of theta
+  theta <- matrix(runif(n = p), ncol = p, nrow=1)
+  theta.new <- theta
+  
+  ###gradient descent###
+  
+  #iteration
+  step <- 1
+  while ( step <= max.iter & norm(theta_opt - theta) > eps ) { 
+    theta = theta.new
+    res <- (X[stochastic.list,] %*% t(theta)) - y[stochastic.list]
+    gradient = t(res) %*% X[stochastic.list,]
+    theta.new = theta - gradient * stepsize
+    step <- step + 1
+    print(norm(theta_opt - theta))
+  }
+  return(theta)
+}
 
 
 
