@@ -25,44 +25,6 @@ test.house.2  = lm(price ~ sqft_living + sqft_lot + bedrooms*bathrooms, data = t
 summary(test.house.2)$r.squared # 0.5110569
 
 ### (d)
-gda <- function(data, stepsize, max.iter, standardize = T, seed=123) {
-  
-  set.seed(seed)
-  data <- as.matrix(data)
-  if(standardize) {data <- scale(data)} # scale data if required
-  theta <- matrix(runif(n = ncol(data)), ncol=ncol(data), nrow=1)
-  
-  X <- cbind(X0 = 1, data[,-ncol(data)]) # add a column of 1 to serve as the intercept
-  y <- data[,ncol(data)]
-  #theta_opt = summary(lm(y ~ X[,2] + X[,3] + X[,4] + X[,5]))$coefficients[,1]
-  
-   
-  # randomly generates starting values of theta
-  theta.new <- matrix(ncol=length(theta), nrow=1)
-  n <- nrow(X)
-  
-  step <- 1
-  while ( step <= max.iter ) { 
-    #print(theta)
-
-    res <- (X %*% t(theta)) - y
-    
-    for(i in 1:length(theta)) {
-      p <- res * X[,i]
-      gradient <- sum(p) 
-      theta.new[1,i] <- theta[1,i] - stepsize * gradient
-    }
-    step <- step + 1
-    theta <- theta.new
-    #print(norm(theta_opt - theta))
-  }
-  return(theta)
-}
-
-
-
-
-### 
 
 #check global variable in function 
 checkStrict <- function(f, silent=FALSE) {
@@ -76,8 +38,7 @@ checkStrict <- function(f, silent=FALSE) {
 }
 
 
-
-gda <- function(data, max.iter = 30, standardize = T, seed=123) {
+gda <- function(data, eps = 0.01, max.iter = 30, standardize = T, seed=123) {
   
   set.seed(seed)
   #scaling data 
@@ -94,32 +55,27 @@ gda <- function(data, max.iter = 30, standardize = T, seed=123) {
   theta_opt = summary(lm(y ~ X[,2] + X[,3] + X[,4] + X[,5]))$coefficients[,1]
   
   #starting values of theta
-  theta <- matrix(runif(n = p  ), ncol = p, nrow=1)
+  theta <- matrix(runif(n = p), ncol = p, nrow=1)
   theta.new <- theta
   
   ###gradient descent###
   
-  #tuning para. 
+  #tuning parameter
   eigen = eigen(t(X) %*% X, only.values = TRUE)
   stepsize = 2 / (eigen$values[1] + eigen$values[p])
+  
   #iteration
   step <- 1
-  while ( step <= max.iter ) { 
+  while ( step <= max.iter & norm(theta_opt - theta) > eps ) { 
     theta = theta.new
     res <- (X %*% t(theta)) - y
     gradient = t(res) %*% X
-    theta.new = theta - gradient * stepsize 
+    theta.new = theta - gradient * stepsize
     step <- step + 1
     print(norm(theta_opt - theta))
   }
   return(theta)
 }
-
-checkStrict(gda)
-
-data = train[c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "price")]
-gda(data, standardize = TRUE)
-gda(data, standardize = FALSE)
 
 
 
