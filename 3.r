@@ -93,7 +93,7 @@ checkStrict <- function(f, silent=FALSE) {
 }
 
 
-gda <- function(data, eps = 0.01, max.iter = 30, standardize = T, seed=123) {
+gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123) {
   
   set.seed(seed)
   #scaling data 
@@ -131,6 +131,18 @@ gda <- function(data, eps = 0.01, max.iter = 30, standardize = T, seed=123) {
   }
   return(theta)
 }
+
+data = train[c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "price")]
+GD.out <- gda(data, standardize = TRUE)
+# gda(data, standardize = FALSE)
+
+
+### Compare with the result of part(a)
+X.prep <- scale(train[,c(5:8,4)])
+X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
+
+pred.y <- X %*% GD.out[1,]
+r2.train <- rsquare(X.prep[,5], pred.y) # 0.5101116 SAME!
 
 
 ### (e)
