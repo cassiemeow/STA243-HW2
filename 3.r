@@ -138,11 +138,19 @@ GD.out <- gda(data, standardize = TRUE)
 
 
 ### Compare with the result of part(a)
+## R-square for training data
 X.prep <- scale(train[,c(5:8,4)])
 X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
 
 pred.y <- X %*% GD.out[1,]
-r2.train <- rsquare(X.prep[,5], pred.y) # 0.5101116 SAME!
+r2.train <- rsquare(X.prep[,5], pred.y) # 0.5101116 VERY CLOSE!
+
+## R-square for test data
+X.prep <- scale(test[,c(5:8,4)])
+X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
+
+pred.y <- X %*% GD.out[1,]
+r2.test <- rsquare(X.prep[,5], pred.y) # 0.5052524
 
 
 ### (e)
