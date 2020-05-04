@@ -163,7 +163,8 @@ knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
 
 ### (e)
 
-sgda <- function(data, eps = 0.01, max.iter = 30, stepsize = 0.1, standardize = T, seed=123) {
+sgda <- function(data, eps = 0.001, max.iter = 30, stepsize = 5, 
+                 standardize = T, seed=123) {
   
   set.seed(seed)
   #scaling data 
@@ -175,27 +176,29 @@ sgda <- function(data, eps = 0.01, max.iter = 30, stepsize = 0.1, standardize = 
   #predictor and response 
   X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
   y <- data[,p]
-  stochastic.list <- sample(1:n, max.iter, replace=TRUE)
-  
-  #oracke solution(after passing the test, can be removed)
-  theta_opt = summary(lm(y ~ X[,2] + X[,3] + X[,4] + X[,5]))$coefficients[,1]
   
   #starting values of theta
   theta <- matrix(runif(n = p), ncol = p, nrow=1)
-  theta.new <- theta
-  
-  ###gradient descent###
   
   #iteration
-  step <- 1
-  while ( step <= max.iter & norm(theta_opt - theta) > eps ) { 
-    theta = theta.new
-    res <- (X[stochastic.list,] %*% t(theta)) - y[stochastic.list]
-    gradient = t(res) %*% X[stochastic.list,]
-    theta.new = theta - gradient * stepsize
-    step <- step + 1
-    print(norm(theta_opt - theta))
+  i <- 0
+  j <- 0
+  ref <- 1
+  
+  gradient <- function (X, y, theta) {
+    t(X) %*% X %*% theta - t(X) * y
   }
+  
+  while ( (i/n) <= max.iter & ref > eps ) { 
+    stochastic.list <- sample(1:n, n)
+    i <- i + 1
+    j <- j + 1
+    eta <- stepsize/(i+1)
+    theta <- theta - eta * gradient(t(as.matrix(X[stochastic.list[j],])),
+                          y[stochastic.list[j]], theta)
+    ref <- norm((t(X) %*% X %*% b - t(X) %*% y),"2")
+  }
+  # theta <- y * theta/X
   return(theta)
 }
 
