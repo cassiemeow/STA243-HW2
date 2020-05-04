@@ -152,6 +152,14 @@ X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
 pred.y <- X %*% GD.out[1,]
 r2.test <- rsquare(X.prep[,5], pred.y) # 0.5052524
 
+## make a table for comparison
+out <- cbind(c(train.r2, test.r2),c(r2.train, r2.test)) %>% as.data.frame()
+colnames(out) <- c("lm Fit", "Gradient Descent")
+rownames(out) <- c("Training Data", "Test Data")
+
+knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
 
 ### (e)
 
