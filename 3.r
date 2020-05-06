@@ -4,15 +4,16 @@ house = read.csv("housingprice.csv")
 train = read.csv("train.data.csv")
 test = read.csv("test.data.csv")
 
+library(kableExtra)
+library(dplyr)
+options(digits=6)
+
 ### (a)
 
 # R2 indicates the percentage of the variance in the dependent variable that the independent variables explain collectively.
 
 train.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = train)
 # summary(train.house)$r.squared # 0.5101139
-
-# test.house = lm(price ~ bedrooms+bathrooms+sqft_living+sqft_lot, data = test)
-# summary(test.house)$r.squared # 0.5054477
 
 train.X <- as.matrix(cbind(rep(1, nrow(train)), apply(train[,5:8],2,scale)))
 train.y <- as.matrix(train[,4])
@@ -57,9 +58,6 @@ knitr::kable(out, align = "c") %>%
 ### (c)
 train.house.2 = lm(price ~ sqft_living+sqft_lot+bedrooms*bathrooms, data = train)
 summary(train.house.2)
-
-# test.house.2 = lm(price ~ sqft_living+sqft_lot+bedrooms*bathrooms, data = test)
-# summary(test.house.2)$r.squared # 0.5110569
 
 fit.2 <- lm(train.y ~ train.X[,2]*train.X[,3]+train.X[,4]+train.X[,5])
 test.X.2 <- as.matrix(cbind(test.X, test.X[,2]*test.X[,3]))
@@ -127,7 +125,7 @@ gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123) {
     gradient = t(res) %*% X
     theta.new = theta - gradient * stepsize
     step <- step + 1
-    print(norm(theta_opt - theta))
+    # print(norm(theta_opt - theta))
   }
   return(theta)
 }
@@ -136,8 +134,6 @@ data = train[c("bedrooms", "bathrooms", "sqft_living", "sqft_lot", "price")]
 GD.out <- gda(data, standardize = TRUE)
 # gda(data, standardize = FALSE)
 
-
-### Compare with the result of part(a)
 ## R-square for training data
 X.prep <- scale(train[,c(5:8,4)])
 X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
@@ -152,6 +148,7 @@ X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
 pred.y <- X %*% GD.out[1,]
 r2.test <- rsquare(X.prep[,5], pred.y) # 0.5052524
 
+
 ## make a table for comparison
 out <- cbind(c(train.r2, test.r2),c(r2.train, r2.test)) %>% as.data.frame()
 colnames(out) <- c("lm Fit", "Gradient Descent")
@@ -163,44 +160,89 @@ knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
 
 ### (e)
 
-sgda <- function(data, eps = 0.001, max.iter = 30, stepsize = 5, 
+sgda <- function(data, max.iter = 30, stepsize = 5,
                  standardize = T, seed=123) {
-  
+
   set.seed(seed)
-  #scaling data 
+  #scaling data
   data <- as.matrix(data)
   p = ncol(data)
   n = nrow(data)
   if(standardize) {data <- scale(data)} # scale data if required
 
-  #predictor and response 
+  # #oracke solution(after passing the test, can be removed)
+  # theta_opt = summary(lm(y ~ X[,2] + X[,3] + X[,4] + X[,5]))$coefficients[,1]
+
+  #predictor and response
   X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
   y <- data[,p]
-  
+
   #starting values of theta
   theta <- matrix(runif(n = p), ncol = p, nrow=1)
-  
+
   #iteration
-  i <- 0
   j <- 0
   ref <- 1
-  
-  gradient <- function (X, y, theta) {
-    t(X) %*% X %*% theta - t(X) * y
-  }
-  
-  while ( (i/n) <= max.iter & ref > eps ) { 
-    stochastic.list <- sample(1:n, n)
-    i <- i + 1
+  stochastic.list <- sample(1:n, n)
+
+  while ( j <= max.iter ) {
     j <- j + 1
-    eta <- stepsize/(i+1)
-    theta <- theta - eta * gradient(t(as.matrix(X[stochastic.list[j],])),
-                          y[stochastic.list[j]], theta)
-    ref <- norm((t(X) %*% X %*% b - t(X) %*% y),"2")
+    eta <- stepsize/(j+1)
+
+    X.new <- X[stochastic.list[j],] %>% as.matrix()
+
+    res <- ( t(X.new) %*% t(theta) ) - y[stochastic.list[j]]
+    gradient <- t(res) %*% t(X.new)
+    theta <- theta - gradient * eta
+    ref <- norm(gradient,"2")
+    # print(norm(theta_opt - theta))
   }
   # theta <- y * theta/X
   return(theta)
 }
+
+SGD.out <- sgda(train[,c(5:8,4)], standardize = T, stepsize = 1, max.iter = 1000)
+# gda(data, standardize = FALSE)
+
+get.r2 <- function (SGD_result) {
+  ## R-square for training data
+  X.prep <- scale(train[,c(5:8,4)])
+  X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
+  pred.y <- X %*% SGD_result[1,]
+  r2.train <- rsquare(X.prep[,5], pred.y)
+
+  ## R-square for test data
+  X.prep <- scale(test[,c(5:8,4)])
+  X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
+  pred.y <- X %*% SGD_result[1,]
+  r2.test <- rsquare(X.prep[,5], pred.y)
+
+  return(c(r2.train,r2.test))
+}
+
+# output <- sapply(seq(1,10,1), FUN = function(x) get.r2(sgda(train[,c(5:8,4)], standardize = T, stepsize = x, max.iter = 2000)))
+# save(output, file = ".../output.rda")
+load(".../output.rda")
+
+
+## select stepsize
+out.new <- t(output) %>% as.data.frame()
+out.new <- cbind(as.character(seq(1,10,1)), output)
+colnames(out.new) <- c("c in stepsize = c/t+1","Training Data", "Test Data")
+
+knitr::kable(out.new, align = "c", caption = "Tuning Parameter Selection") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+
+## make a table for comparison
+ok <- get.r2(sgda(train[,c(5:8,4)], standardize = T, stepsize = 2, max.iter = 2000))
+
+out <- cbind(c(train.r2, test.r2),c(ok[1], ok[2])) %>% as.data.frame()
+colnames(out) <- c("lm Fit", "Stochastic Gradient Descent")
+rownames(out) <- c("Training Data", "Test Data")
+
+knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
 
 
 
