@@ -94,6 +94,7 @@ checkStrict <- function(f, silent=FALSE) {
 }
 
 
+```{r}
 ##################### For linear model fit with no interaction term:
 dat.lm <- train[,c(5:8,4)]
 dat.lm.scale <- scale(dat.lm)
@@ -133,22 +134,28 @@ gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123,
   data <- as.matrix(data)
   p <- ncol(data)
   n <- nrow(data)
+  
+  mean.x = apply(data[,-p], 2, mean)
+  sd.x = apply(data[,-p], 2, sd)
+  mean.y = mean(data[,p])
+  sd.y = sd(data[,p])
+  
   if(standardize) {data <- scale(data)} # scale data if required
-
+  
   #predictor and response 
-  X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
+  X <- data[,-p]
   y <- data[,p]
   
   #starting values of theta
-  theta <- matrix(runif(n = p), 
-                  ncol = p, nrow=1)
+  theta <- matrix(runif(n = p-1), 
+                  ncol = p-1, nrow=1)
   theta.new <- theta
   
   ###gradient descent###
   
   #tuning parameter
   eigen <- eigen(t(X) %*% X, only.values = TRUE)
-  stepsize <- 2 / (eigen$values[1] + eigen$values[p])
+  stepsize <- 2 / (eigen$values[1] + eigen$values[p-1])
   
   #iteration
   step <- 1
@@ -158,59 +165,47 @@ gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123,
     gradient <- t(res) %*% X
     theta.new <- theta - gradient * stepsize
     step <- step + 1
-    print(norm(optimal.theta - theta))
+    # print(norm(optimal.theta - theta))
   }
-  return(theta)
+  beta = sd.y * theta[2:p-1] / sd.x
+  intercept = -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
+  result = c("Intercept"=intercept, beta)
+  return(list(result,theta))
 }
 
-GD.out <- gda(train[,c(5:8,4)], standardize = TRUE, optimal.theta = theta_opt_lm)
+GD.out <- gda(train[,c(5:8,4)], standardize = TRUE, optimal.theta = theta_opt_lm[2:5])
 
 GD.out.int <- gda(dat.lm.int, 
-                  standardize = TRUE, optimal.theta = theta_opt_lm.int,
+                  standardize = TRUE, optimal.theta = theta_opt_lm.int[2:6],
                   max.iter = 500)
 
 ## R-square for training data
 get.r2 <- function (train = train[,c(5:8,4)],
                     test = test[,c(5:8,4)], SGD_result) {
+  p = ncol(train)
   ## R-square for training data
   X.prep <- scale(train)
-  X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
-  pred.y <- X %*% SGD_result[1,]
-  r2.train <- rsquare(X.prep[,5], pred.y)
+  X <- X.prep[,-ncol(X.prep)]
+  pred.y <- X %*% t(SGD_result)
+  r2.train <- rsquare(X.prep[,p], pred.y)
 
   ## R-square for test data
   X.prep <- scale(test)
-  X <- cbind(X0 = 1, X.prep[,-ncol(X.prep)])
-  pred.y <- X %*% SGD_result[1,]
-  r2.test <- rsquare(X.prep[,5], pred.y)
+  X <- X.prep[,-ncol(X.prep)]
+  pred.y <- X %*% t(SGD_result)
+  r2.test <- rsquare(X.prep[,p], pred.y)
 
   return(c(r2.train,r2.test))
 }
 
+r2.lm <- get.r2(train[,c(5:8,4)], test[,c(5:8,4)], SGD_result = GD.out[[2]])
+r2.lm.int <- get.r2(dat.lm.int, dat.lm.int.test, SGD_result =GD.out.int[[2]])
+```
 
 
-r2.lm <- get.r2(train[,c(5:8,4)], test[,c(5:8,4)], GD.out)
-r2.lm.int <- get.r2(dat.lm.int, dat.lm.int.test, GD.out.int)
-
-
-## make a table for comparison
-out <- cbind(c(train.r2, test.r2),c(r2.lm[1], r2.lm[2]), 
-             c(train.r2.2, test.r2.2),c(r2.lm.int[1],r2.lm.int[2])) %>% as.data.frame()
-colnames(out) <- c("lm Fit", "Gradient Descent - lm", 
-                   "lm with Interaction Fit", "Gradient Descent - lm+int")
-rownames(out) <- c("Training Data", "Test Data")
-
-knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-
-
-
-
-### (e)
-
-
+```{r}
 sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE, 
-                 standardize = T, seed=123, optimal = theta_opt_lm.int) {
+                 standardize = T, seed=123) {
 
   set.seed(seed)
   #scaling data
@@ -218,22 +213,27 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
   data_test <- as.matrix(data_test)
   p = ncol(data)
   n = nrow(data)
+  
+  mean.x = apply(data[,-p], 2, mean)
+  sd.x = apply(data[,-p], 2, sd)
+  mean.y = mean(data[,p])
+  sd.y = sd(data[,p])
+  
   if (standardize) { 
     data <- scale(data)
     data_test <- scale(data_test)
   } # scale data if required
 
-
   #predictor and response
-  X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
+  X <- data[,-p]
   y <- data[,p]
   
   #test data
-  X.test <- cbind(X0 = 1, data_test[, -p])
+  X.test <- data_test[, -p]
   y.test <- data_test[,p]
   
   #starting values of theta
-  theta <- matrix(runif(n = p), ncol = p, nrow = 1)
+  theta <- matrix(runif(n = p-1), ncol = p-1, nrow = 1)
   train.loss <- norm(y - X %*% t(theta), "2") 
   test.loss <- norm(y.test - X.test %*% t(theta), "2")
 
@@ -251,7 +251,6 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
       eta <- stepsize 
     }
     
-    
     X.new <- X[stochastic.list[j],] %>% as.matrix()
 
     res <- ( t(X.new) %*% t(theta) ) - y[stochastic.list[j]]
@@ -260,8 +259,8 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
     ref <- norm(gradient,"2")
     train.loss <- c(train.loss, norm(y - X %*% t(theta), "2")   )
     test.loss <- c(test.loss, norm(y.test - X.test%*%t(theta), "2")  )
-    print(eta)
-    print(norm(optimal - theta))
+    # print(eta)
+    # print(norm(optimal - theta))
   }
   
   color = c("train.loss" = "black", "test.loss" = "red")
@@ -277,68 +276,74 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
     scale_color_manual(values = color)
   
   show(gg)
-  print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
-  print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
+  # print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
+  # print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
   
-
-  # theta <- y * theta/X
-  return(theta)
+  beta = sd.y * theta[2:p-1] / sd.x
+  intercept = -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
+  result = c("Intercept"=intercept, beta)
+  return(list("original beta"=result, "scaled beta"=theta, "R2 train"=rsquare(y, X%*%t(theta)), 
+              "R2 test"= rsquare(y.test, X.test %*% t(theta)) ))
 }
 
 
-checkStrict(sgda)
-
 ##### NO interaction 
 #fix stepsize
-sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 3000, optimal = theta_opt_lm)
+SGD.lm.dimi = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
 #diminish stepsize
-sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 3000, optimal = theta_opt_lm)
-
-
+SGD.lm = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
 
 
 ##### interaction 
 # SGD.out <- sgda(train[,c(5:8,4)], standardize = T, stepsize = 1, max.iter = 1000)
 #fix stepsize
-sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 3000) #Rsquare 0.5149 / 0.509 
-#diminish stepsize
-sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 3000) #Rsquare 0.486 / 0.486
+SGD.lm.int.dimi  = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) #Rsquare 0.514392 / 0.50883
+
+SGD.lm.int = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 520) #Rsquare 0.498575 / 0.494554
+
+```
+
+
+```{r}
+## make a table for comparison - no interaction
+noint.result = rbind(cbind(summary(train.house)$coefficients[,1],
+                     GD.out[[1]],SGD.lm.dimi[[1]],SGD.lm[[1]]), 
+                     cbind(c(train.r2, test.r2), c(r2.lm[1],r2.lm[2]),
+                           c(SGD.lm.dimi[[3]],SGD.lm.dimi[[4]]),
+                           c( SGD.lm[[3]],SGD.lm[[4]] )))
+noint.result[1:5,] = as.character(round(noint.result[1:5,], 2))
+noint.result[6:7,] = as.character(round(as.numeric(noint.result[6:7,]), 5))
+
+colnames(noint.result) <- c("linear Model", "Gradient Descent", 
+                   "SGD with diminishing stepsize", 
+                   "SGD with fixed stepsize")
+rownames(noint.result)[6:7] <- c("R2 Train", "R2 Test")
+
+knitr::kable(noint.result, align = "c") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
 
 
 
+```{r}
+## make a table for comparison - no interaction
+int.result = rbind(cbind(summary(train.house.2)$coefficients[,1],
+                     GD.out.int[[1]], SGD.lm.int.dimi[[1]], SGD.lm.int[[1]]), 
+                     cbind(c(train.r2.2, test.r2.2), c(r2.lm.int[1],r2.lm.int[2]),
+                           c(SGD.lm.int.dimi[[3]],SGD.lm.int.dimi[[4]]),
+                           c( SGD.lm.int[[3]],SGD.lm.int[[4]] )))
+int.result[1:6,] = as.character(round(int.result[1:6,], 2))
+int.result[7:8,] = as.character(round(as.numeric(int.result[7:8,]), 5))
 
+colnames(int.result) <- c("linear Model", "Gradient Descent", 
+                   "SGD with diminishing stepsize", 
+                   "SGD with fixed stepsize")
+rownames(int.result)[7:8] <- c("R2 Train", "R2 Test")
 
-
-output <- sapply(seq(1,10,1), 
-                 FUN = function(x) get.r2(train[,c(5:8,4)],test[,c(5:8,4)],
-                                          sgda(train[,c(5:8,4)], standardize = T, 
-                                               stepsize = x, max.iter = 2000)))
-
-# bibi <- sapply(seq(1,10,1), FUN = function(x) get.r2(int.data, int.data.test,
-#   SGD_result = sgda(dat.lm.int, standardize = T, stepsize = x, max.iter = 100)))
-
-# save(output, file = "/Users/xuchenghuiyun/Desktop/STA243/data/output.rda")
-# load("/Users/xuchenghuiyun/Desktop/STA243/data/output.rda")
-
-
-## select stepsize
-out.new <- t(output) %>% as.data.frame()
-out.new <- cbind(as.character(seq(1,10,1)), output)
-colnames(out.new) <- c("c in stepsize = c/t+1","Training Data", "Test Data")
-
-knitr::kable(out.new, align = "c", caption = "Tuning Parameter Selection") %>%
+knitr::kable(int.result, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
-
-## make a table for comparison
-ok <- get.r2(sgda(train[,c(5:8,4)], standardize = T, stepsize = 2, max.iter = 2000))
-
-out <- cbind(c(train.r2, test.r2),c(ok[1], ok[2])) %>% as.data.frame()
-colnames(out) <- c("lm Fit", "Stochastic Gradient Descent")
-rownames(out) <- c("Training Data", "Test Data")
-
-knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
+```
 
 
 
