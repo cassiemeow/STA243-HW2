@@ -9,6 +9,8 @@ library(dplyr)
 library(ggplot2)
 options(digits=6)
 
+
+
 ### (a)
 
 # R2 indicates the percentage of the variance in the dependent variable that the independent variables explain collectively.
@@ -121,6 +123,7 @@ X.test <- cbind(1, dat.lm.int.scale.test[,-ncol(dat.lm.int.scale.test)])
 theta_opt_lm.int <- summary(lm(y ~ X[,2]+X[,3]+X[,4]+X[,5]+X[,6]))$coefficients[,1]
 
 
+
 ##################### Create a Gradient Descent Function:
 gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123,
                 optimal.theta) {
@@ -202,7 +205,9 @@ knitr::kable(out, align = "c", caption = "R-square Comparison") %>%
 
 
 
+
 ### (e)
+
 
 sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE, 
                  standardize = T, seed=123, optimal = theta_opt_lm.int) {
@@ -218,9 +223,11 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
     data_test <- scale(data_test)
   } # scale data if required
 
+
   #predictor and response
   X <- cbind(X0 = 1, data[,-p]) # add a column of 1 to serve as the intercept
   y <- data[,p]
+  
   #test data
   X.test <- cbind(X0 = 1, data_test[, -p])
   y.test <- data_test[,p]
@@ -229,6 +236,7 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
   theta <- matrix(runif(n = p), ncol = p, nrow = 1)
   train.loss <- norm(y - X %*% t(theta), "2") 
   test.loss <- norm(y.test - X.test %*% t(theta), "2")
+
   #iteration
   j <- 0
   ref <- 1
@@ -236,11 +244,13 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
 
   while ( j <= max.iter ) {
     j <- j + 1
+
     if(diminish){
       eta <- stepsize / (j + 1)
     }else{
       eta <- stepsize 
     }
+    
     
     X.new <- X[stochastic.list[j],] %>% as.matrix()
 
@@ -270,9 +280,11 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
   print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
   print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
   
+
   # theta <- y * theta/X
   return(theta)
 }
+
 
 checkStrict(sgda)
 
@@ -291,6 +303,7 @@ sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, ma
 sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 3000) #Rsquare 0.5149 / 0.509 
 #diminish stepsize
 sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 3000) #Rsquare 0.486 / 0.486
+
 
 
 
