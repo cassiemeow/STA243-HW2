@@ -1,8 +1,8 @@
 
-fancy <- read.csv("fancyhouse.csv")
-house <- read.csv("housingprice.csv")
-train <- read.csv("train.data.csv")
-test  <- read.csv("test.data.csv")
+fancy <- read.csv("../data/fancyhouse.csv")
+house <- read.csv("../data/housingprice.csv")
+train <- read.csv("../data/train.data.csv")
+test  <- read.csv("../data/test.data.csv")
 
 library(kableExtra)
 library(dplyr)
