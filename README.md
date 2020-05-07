@@ -1,5 +1,5 @@
 # STA243 Homework2
-### Group member:  Cassie Xu and Han Chen
+# Group member:  Cassie Xu and Han Chen
 In this homework, we are expected to implement the basic stochastic gradient descent and gradient decent method and compare it with the classical least square preformance.
 
 
