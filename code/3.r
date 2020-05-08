@@ -135,10 +135,10 @@ gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123,
   p <- ncol(data)
   n <- nrow(data)
   
-  mean.x = apply(data[,-p], 2, mean)
-  sd.x = apply(data[,-p], 2, sd)
-  mean.y = mean(data[,p])
-  sd.y = sd(data[,p])
+  mean.x <- apply(data[,-p], 2, mean)
+  sd.x <- apply(data[,-p], 2, sd)
+  mean.y <- mean(data[,p])
+  sd.y <- sd(data[,p])
   
   if(standardize) {data <- scale(data)} # scale data if required
   
@@ -167,9 +167,9 @@ gda <- function(data, eps = 0.001, max.iter = 50, standardize = T, seed=123,
     step <- step + 1
     # print(norm(optimal.theta - theta))
   }
-  beta = sd.y * theta[2:p-1] / sd.x
-  intercept = -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
-  result = c("Intercept"=intercept, beta)
+  beta <- sd.y * theta[2:p-1] / sd.x
+  intercept <- -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
+  result <- c("Intercept"=intercept, beta)
   return(list(result,theta))
 }
 
@@ -182,7 +182,7 @@ GD.out.int <- gda(dat.lm.int,
 ## R-square for training data
 get.r2 <- function (train = train[,c(5:8,4)],
                     test = test[,c(5:8,4)], SGD_result) {
-  p = ncol(train)
+  p <- ncol(train)
   ## R-square for training data
   X.prep <- scale(train)
   X <- X.prep[,-ncol(X.prep)]
@@ -202,7 +202,7 @@ r2.lm <- get.r2(train[,c(5:8,4)], test[,c(5:8,4)], SGD_result = GD.out[[2]])
 r2.lm.int <- get.r2(dat.lm.int, dat.lm.int.test, SGD_result =GD.out.int[[2]])
 
 
-noint.result = cbind(c(train.r2, test.r2) ,r2.lm)
+noint.result <- cbind(c(train.r2, test.r2) ,r2.lm)
 colnames(noint.result) <- c("lm fit", "Gradient Descent")
 rownames(noint.result) <- c("Training data", "test data")
 
@@ -210,7 +210,7 @@ rownames(noint.result) <- c("Training data", "test data")
 knitr::kable(noint.result, align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
-int.result = cbind(c(train.r2, test.r2) ,r2.lm.int)
+int.result <- cbind(c(train.r2, test.r2) ,r2.lm.int)
 colnames(int.result) <- c("lm fit", "Gradient Descent")
 rownames(int.result) <- c("Training data", "test data")
 
@@ -230,13 +230,13 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
   #scaling data
   data <- as.matrix(data)
   data_test <- as.matrix(data_test)
-  p = ncol(data)
-  n = nrow(data)
+  p <- ncol(data)
+  n <- nrow(data)
   
-  mean.x = apply(data[,-p], 2, mean)
-  sd.x = apply(data[,-p], 2, sd)
-  mean.y = mean(data[,p])
-  sd.y = sd(data[,p])
+  mean.x <- apply(data[,-p], 2, mean)
+  sd.x <- apply(data[,-p], 2, sd)
+  mean.y <- mean(data[,p])
+  sd.y <- sd(data[,p])
   
   if (standardize) { 
     data <- scale(data)
@@ -282,8 +282,8 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
     # print(norm(optimal - theta))
   }
   
-  color = c("train.loss" = "black", "test.loss" = "red")
-  gg = ggplot() + 
+  color <- c("train.loss" = "black", "test.loss" = "red")
+  gg <- ggplot() + 
     geom_point(aes(x = 1:length(test.loss), y = test.loss, color = "test.loss"), size = 0.5) + 
     geom_line(aes(x = 1:length(test.loss), y = test.loss, color = "test.loss"), size = 0.5)  + 
     geom_point(aes(x = 1:length(train.loss), y = train.loss, color = "train.loss"), size = 0.5) + 
@@ -298,9 +298,9 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
    #print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
    #print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
   
-  beta = sd.y * theta[2:p-1] / sd.x
-  intercept = -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
-  result = c("Intercept"=intercept, beta)
+  beta <- sd.y * theta[2:p-1] / sd.x
+  intercept <- -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
+  result <- c("Intercept"=intercept, beta)
   return(list("original beta"=result, "scaled beta"=theta, "R2 train"=rsquare(y, X%*%t(theta)), 
               "R2 test"= rsquare(y.test, X.test %*% t(theta)) ))
 }
@@ -308,31 +308,31 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
 
 ##### NO interaction 
 #fix stepsize
-SGD.lm.dimi = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
+SGD.lm.dimi <- sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
 
 #diminish stepsize
-SGD.lm = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
+SGD.lm <- sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
 
 
 ##### interaction 
 # SGD.out <- sgda(train[,c(5:8,4)], standardize = T, stepsize = 1, max.iter = 1000)
 #fix stepsize
-SGD.lm.int.dimi  = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) #Rsquare 0.514392 / 0.50883
+SGD.lm.int.dimi  <- sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) #Rsquare 0.514392 / 0.50883
 
-SGD.lm.int = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 520) #Rsquare 0.498575 / 0.494554
+SGD.lm.int <- sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 520) #Rsquare 0.498575 / 0.494554
 
 
 
 
 
 ## make a table for comparison - no interaction
-noint.result = rbind(cbind(summary(train.house)$coefficients[,1],
+noint.result <- rbind(cbind(summary(train.house)$coefficients[,1],
                      GD.out[[1]],SGD.lm.dimi[[1]],SGD.lm[[1]]), 
                      cbind(c(train.r2, test.r2), c(r2.lm[1],r2.lm[2]),
                            c(SGD.lm.dimi[[3]],SGD.lm.dimi[[4]]),
                            c( SGD.lm[[3]],SGD.lm[[4]] )))
-noint.result[1:5,] = as.character(round(noint.result[1:5,], 2))
-noint.result[6:7,] = as.character(round(as.numeric(noint.result[6:7,]), 5))
+noint.result[1:5,] <- as.character(round(noint.result[1:5,], 2))
+noint.result[6:7,] <- as.character(round(as.numeric(noint.result[6:7,]), 5))
 
 colnames(noint.result) <- c("linear Model", "Gradient Descent", 
                    "SGD with diminishing stepsize", 
@@ -347,13 +347,13 @@ knitr::kable(noint.result[6:7,], align = "c") %>%
 
 
 ## make a table for comparison - no interaction
-int.result = rbind(cbind(summary(train.house.2)$coefficients[,1],
+int.result <- rbind(cbind(summary(train.house.2)$coefficients[,1],
                      GD.out.int[[1]], SGD.lm.int.dimi[[1]], SGD.lm.int[[1]]), 
                      cbind(c(train.r2.2, test.r2.2), c(r2.lm.int[1],r2.lm.int[2]),
                            c(SGD.lm.int.dimi[[3]],SGD.lm.int.dimi[[4]]),
                            c( SGD.lm.int[[3]],SGD.lm.int[[4]] )))
-int.result[1:6,] = as.character(round(int.result[1:6,], 2))
-int.result[7:8,] = as.character(round(as.numeric(int.result[7:8,]), 5))
+int.result[1:6,] <- as.character(round(int.result[1:6,], 2))
+int.result[7:8,] <- as.character(round(as.numeric(int.result[7:8,]), 5))
 
 colnames(int.result) <- c("linear Model", "Gradient Descent", 
                    "SGD with diminishing stepsize", 
