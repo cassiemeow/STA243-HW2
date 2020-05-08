@@ -200,7 +200,27 @@ get.r2 <- function (train = train[,c(5:8,4)],
 
 r2.lm <- get.r2(train[,c(5:8,4)], test[,c(5:8,4)], SGD_result = GD.out[[2]])
 r2.lm.int <- get.r2(dat.lm.int, dat.lm.int.test, SGD_result =GD.out.int[[2]])
+
+
+noint.result = cbind(c(train.r2, test.r2) ,r2.lm)
+colnames(noint.result) <- c("lm fit", "Gradient Descent")
+rownames(noint.result) <- c("Training data", "test data")
+
+
+knitr::kable(noint.result, align = "c") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+int.result = cbind(c(train.r2, test.r2) ,r2.lm.int)
+colnames(int.result) <- c("lm fit", "Gradient Descent")
+rownames(int.result) <- c("Training data", "test data")
+
+
+knitr::kable(int.result, align = "c") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+
 ```
+
 
 
 ```{r}
@@ -276,8 +296,8 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
     scale_color_manual(values = color)
   
   show(gg)
-  # print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
-  # print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
+   print(paste0("Rsquare for training data is ", rsquare(y, X%*%t(theta))))
+   print(paste0("Rsquare for test data is ", rsquare(y.test, X.test %*% t(theta))))
   
   beta = sd.y * theta[2:p-1] / sd.x
   intercept = -sd.y*sum(theta[2:p-1] * mean.x/sd.x) + mean.y
@@ -290,6 +310,8 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
 ##### NO interaction 
 #fix stepsize
 SGD.lm.dimi = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
+SGD.lm.dimi$`scaled beta`
+SGD
 #diminish stepsize
 SGD.lm = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
 
@@ -319,7 +341,7 @@ colnames(noint.result) <- c("linear Model", "Gradient Descent",
                    "SGD with fixed stepsize")
 rownames(noint.result)[6:7] <- c("R2 Train", "R2 Test")
 
-knitr::kable(noint.result, align = "c") %>%
+knitr::kable(noint.result[6:7,], align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
@@ -340,7 +362,7 @@ colnames(int.result) <- c("linear Model", "Gradient Descent",
                    "SGD with fixed stepsize")
 rownames(int.result)[7:8] <- c("R2 Train", "R2 Test")
 
-knitr::kable(int.result, align = "c") %>%
+knitr::kable(int.result[7:8, ], align = "c") %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
 ```
