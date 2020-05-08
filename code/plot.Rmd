@@ -322,31 +322,31 @@ sgda <- function(data, data_test, max.iter = 30, stepsize = 5, diminish = TRUE,
 
 ##### NO interaction 
 #fix stepsize
-SGD.lm.dimi = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
+SGD.lm.dimi <- sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) # 0.505301, 0.500935
 
 #diminish stepsize
-SGD.lm = sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
+SGD.lm <- sgda(dat.lm, dat.lm.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 1600) # 0.503264, 0.498047
 
 
 ##### interaction 
 # SGD.out <- sgda(train[,c(5:8,4)], standardize = T, stepsize = 1, max.iter = 1000)
 #fix stepsize
-SGD.lm.int.dimi  = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) #Rsquare 0.514392 / 0.50883
+SGD.lm.int.dimi <- sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 2, diminish = TRUE, max.iter = 2000) #Rsquare 0.514392 / 0.50883
 
-SGD.lm.int = sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 520) #Rsquare 0.498575 / 0.494554
+SGD.lm.int <- sgda(dat.lm.int, dat.lm.int.test, standardize = T, stepsize = 0.02, diminish = FALSE, max.iter = 520) #Rsquare 0.498575 / 0.494554
 
 ```
 
 
 ```{r}
 ## make a table for comparison - no interaction
-noint.result = rbind(cbind(summary(train.house)$coefficients[,1],
+noint.result <- rbind(cbind(summary(train.house)$coefficients[,1],
                      GD.out[[1]],SGD.lm.dimi[[1]],SGD.lm[[1]]), 
                      cbind(c(train.r2, test.r2), c(r2.lm[1],r2.lm[2]),
                            c(SGD.lm.dimi[[3]],SGD.lm.dimi[[4]]),
                            c( SGD.lm[[3]],SGD.lm[[4]] )))
-noint.result[1:5,] = as.character(round(noint.result[1:5,], 2))
-noint.result[6:7,] = as.character(round(as.numeric(noint.result[6:7,]), 5))
+noint.result[1:5,] <- as.character(round(noint.result[1:5,], 2))
+noint.result[6:7,] <- as.character(round(as.numeric(noint.result[6:7,]), 5))
 
 colnames(noint.result) <- c("linear Model", "Gradient Descent", 
                    "SGD with diminishing stepsize", 
